@@ -180,8 +180,10 @@ Deno.serve(async (req) => {
     );
   }
 
+  // acr: teto de 60 s na chamada; sem ele um travamento do Gemini só aparece como shutdown aos 150 s.
   const genai = new GoogleGenAI({
     apiKey,
+    httpOptions: { timeout: 60000 },
   });
 
   const { content, status } = incoming;
@@ -320,6 +322,10 @@ Deno.serve(async (req) => {
 
   const file = await downloadFromStorage(client, content.file.uri);
   const base64File = encodeBase64(await file.arrayBuffer());
+  const t0 = Date.now(); // acr: tempo da chamada ao Gemini
+  log.info(
+    `acr: arquivo baixado (${base64File.length} b64), chamando ${model}`,
+  );
 
   let prompt = "";
 
@@ -441,6 +447,8 @@ Deno.serve(async (req) => {
       `Gemini API error in preprocessing. Skipping preprocessing. ${error}`,
     );
   }
+
+  log.info(`acr: ${model} respondeu em ${Date.now() - t0} ms`);
 
   // Record AI usage in the ledger
   if (response.usageMetadata) {
