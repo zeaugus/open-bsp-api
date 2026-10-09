@@ -271,7 +271,9 @@ Deno.serve(async (req) => {
   }
 
   // Check AI credits balance before touching storage (only when using our API key)
-  const billable = !config.api_key;
+  // acr: OPENBSP_COBRANCA_IA=off quando GOOGLE_API_KEY é conta própria (sem créditos de plataforma).
+  const billable = !config.api_key &&
+    Deno.env.get("OPENBSP_COBRANCA_IA") !== "off";
 
   // Fetch cost pricing before the LLM call
   const { data: costs } = await client
