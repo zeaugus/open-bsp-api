@@ -26,7 +26,16 @@ async function getBusinessCredentials(
     });
   }
 
-  return data;
+  // acr: número ligado à mão não tem extra.access_token; cai no token do usuário do sistema,
+  // como o dispatcher e o webhook já fazem.
+  if (!data.waba_id) {
+    throw new HTTPException(400, { message: "Number has no extra.waba_id" });
+  }
+  return {
+    waba_id: data.waba_id,
+    access_token: data.access_token ||
+      Deno.env.get("META_SYSTEM_USER_ACCESS_TOKEN") || "",
+  };
 }
 
 export async function listTemplates(
